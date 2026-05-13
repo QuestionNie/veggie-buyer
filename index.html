@@ -7,21 +7,29 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="大智采购">
     <title>大智蔬菜采购助手</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f2f5f3; color: #1e293b; height: 100vh;
-            display: flex; flex-direction: column;
+            background: #f2f5f3;
+            color: #1e293b;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
             -webkit-tap-highlight-color: transparent;
         }
-        /* 顶部安全区域 + 标题栏 + 标签栏整体容器 */
         .top-container {
             flex-shrink: 0;
             background: white;
-            padding-top: env(safe-area-inset-top, 0px); /* 自动避开刘海 */
+            padding-top: env(safe-area-inset-top, 0px);
             border-bottom: 1px solid #e2e8f0;
+            z-index: 10;
         }
         .app-title {
             text-align: center;
@@ -36,323 +44,587 @@
             display: flex;
             justify-content: space-around;
             padding: 8px 0 10px;
+            gap: 2px;
         }
         .tab {
             font-size: 14px;
-            padding: 8px 16px;
+            padding: 8px 14px;
             border-radius: 20px;
             color: #64748b;
             font-weight: 600;
             transition: 0.2s;
             background: transparent;
-        }
-        .tab.active { background: #2d6a4f; color: white; }
-        .view { display: none; flex: 1; overflow-y: auto; padding: 16px 16px 24px; }
-        .view.active { display: block; }
-        .card {
-            background: white; border-radius: 16px; padding: 16px;
-            margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-        }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .form-group { margin-bottom: 10px; }
-        .form-group label {
-            display: block; font-size: 13px; color: #475569; margin-bottom: 4px; font-weight: 500;
-        }
-        input, select, textarea {
-            width: 100%; padding: 12px; border: 1px solid #d1d5db;
-            border-radius: 12px; font-size: 16px; background: #fafbfa;
-            -webkit-appearance: none;
-        }
-        input:focus, select:focus { border-color: #2d6a4f; outline: none; }
-        .btn {
-            padding: 14px; border: none; border-radius: 14px; font-weight: 700;
-            font-size: 16px; width: 100%; margin-top: 8px; transition: 0.2s;
-        }
-        .btn-primary { background: #2d6a4f; color: white; }
-        .btn-primary:active { background: #1b4332; }
-        .btn-outline { background: white; border: 2px solid #2d6a4f; color: #2d6a4f; }
-        .btn-outline:active { background: #f0fdf4; }
-        .btn-danger { background: #b91c1c; color: white; }
-        .btn-sm { padding: 8px 16px; font-size: 14px; width: auto; display: inline-block; }
-        .chip {
-            display: inline-block; background: #e9f5ef; border: 1px solid #b8d9c8;
-            padding: 8px 16px; border-radius: 20px; margin: 4px; font-size: 14px;
-            font-weight: 600; color: #1e4620; cursor: pointer; transition: 0.15s;
-        }
-        .chip:active { background: #c4e3d4; }
-        .badge {
-            display: inline-block; padding: 4px 10px; border-radius: 20px;
-            font-size: 12px; font-weight: 700;
-        }
-        .A { background: #dcfce7; color: #15803d; }
-        .B { background: #fef9c3; color: #a16207; }
-        .C { background: #fee2e2; color: #b91c1c; }
-        .record-item {
-            border-bottom: 1px solid #f1f5f9; padding: 12px 0;
-            display: flex; justify-content: space-between; align-items: center; font-size: 15px;
-        }
-        .record-item .info { flex: 1; }
-        .record-item .name { font-weight: 700; font-size: 16px; }
-        .record-item .meta { color: #64748b; font-size: 13px; margin-top: 4px; }
-        .supplier-card {
-            border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px;
-            margin-bottom: 12px; transition: 0.1s; cursor: pointer;
-        }
-        .supplier-card:active { background: #f8fafc; }
-        .supplier-name { font-size: 18px; font-weight: 700; color: #0f172a; }
-        .supplier-stats { display: flex; gap: 16px; margin-top: 8px; font-size: 14px; color: #334155; }
-        canvas { max-height: 220px; }
-        .toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-        .toolbar input, .toolbar select { flex: 1; }
-        .date-group { margin-bottom: 16px; }
-        .date-header {
-            background: #f1f5f9; padding: 12px; border-radius: 12px;
-            font-weight: 700; display: flex; justify-content: space-between; align-items: center;
             cursor: pointer;
+            white-space: nowrap;
+            user-select: none;
         }
-        .date-detail { margin-top: 8px; padding-left: 8px; }
-        .compare-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .compare-table td, .compare-table th { padding: 8px; border-bottom: 1px solid #e2e8f0; text-align: left; }
-        .diff-up { color: #b91c1c; font-weight: 700; }
-        .diff-down { color: #15803d; font-weight: 700; }
-        @media (max-width: 400px) { .grid-2 { grid-template-columns: 1fr; } }
+        .tab.active {
+            background: #2d6a4f;
+            color: white;
+        }
+        .view {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 16px 24px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .view.active {
+            display: block;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #475569;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            font-size: 16px;
+            background: #fafbfa;
+            -webkit-appearance: none;
+            transition: border-color 0.2s;
+        }
+        input:focus,
+        select:focus {
+            border-color: #2d6a4f;
+            outline: none;
+            background: #fff;
+        }
+        .btn {
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 8px;
+            transition: 0.2s;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-primary {
+            background: #2d6a4f;
+            color: white;
+        }
+        .btn-primary:active {
+            background: #1b4332;
+            transform: scale(0.98);
+        }
+        .btn-outline {
+            background: white;
+            border: 2px solid #2d6a4f;
+            color: #2d6a4f;
+        }
+        .btn-outline:active {
+            background: #f0fdf4;
+            transform: scale(0.98);
+        }
+        .btn-danger {
+            background: #b91c1c;
+            color: white;
+        }
+        .btn-danger:active {
+            background: #7f1d1d;
+            transform: scale(0.98);
+        }
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 14px;
+            width: auto;
+            display: inline-block;
+            cursor: pointer;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            transition: 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-sm:active {
+            transform: scale(0.96);
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .A {
+            background: #dcfce7;
+            color: #15803d;
+        }
+        .B {
+            background: #fef9c3;
+            color: #a16207;
+        }
+        .C {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .record-item {
+            border-bottom: 1px solid #f1f5f9;
+            padding: 12px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 15px;
+            gap: 8px;
+        }
+        .record-item .info {
+            flex: 1;
+            min-width: 0;
+        }
+        .record-item .name {
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .record-item .meta {
+            color: #64748b;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        .supplier-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: 0.1s;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .supplier-card:active {
+            background: #f8fafc;
+        }
+        .supplier-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .supplier-stats {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+            font-size: 14px;
+            color: #334155;
+            flex-wrap: wrap;
+        }
+        canvas {
+            max-height: 240px;
+        }
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .toolbar input,
+        .toolbar select {
+            flex: 1;
+            min-width: 80px;
+        }
+        .date-group {
+            margin-bottom: 16px;
+        }
+        .date-header {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .date-detail {
+            margin-top: 8px;
+            padding-left: 8px;
+        }
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .compare-table td,
+        .compare-table th {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: left;
+        }
+        .compare-table th {
+            background: #f8fafc;
+            font-weight: 700;
+            color: #1e4620;
+            font-size: 13px;
+        }
+        .diff-up {
+            color: #b91c1c;
+            font-weight: 700;
+        }
+        .diff-down {
+            color: #15803d;
+            font-weight: 700;
+        }
+        .unit-tag {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        .search-box {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .search-box input {
+            padding-right: 36px;
+        }
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            pointer-events: none;
+            font-size: 16px;
+        }
+        @media (max-width: 400px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .grid-3 {
+                grid-template-columns: 1fr 1fr;
+            }
+            .tab {
+                font-size: 12px;
+                padding: 7px 10px;
+            }
+            .supplier-stats {
+                gap: 8px;
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="top-container">
-    <div class="app-title">🐲大智蔬菜采购助手🐲</div>
-    <div class="tab-bar" id="tabBar">
-        <div class="tab active" data-tab="add">📝 录入</div>
-        <div class="tab" data-tab="list">📋 记录</div>
-        <div class="tab" data-tab="suppliers">🏭 供应商</div>
-        <div class="tab" data-tab="stats">📊 分析</div>
-    </div>
-</div>
-
-<!-- 录入页 -->
-<div id="addView" class="view active">
-    <div class="card">
-        <h3 style="margin-bottom:12px;color:#2d6a4f">⚡ 常用品种快速录入</h3>
-        <div id="quickChips" style="margin-bottom:14px;"></div>
-    </div>
-    <div class="card">
-        <h3 style="margin-bottom:12px;color:#2d6a4f">✏️ 新增采购记录</h3>
-        <div class="form-group"><label>日期 (必填)</label><input type="date" id="date"></div>
-        <div class="grid-2">
-            <div class="form-group"><label>品类</label><select id="category"><option value="">选择</option><option>叶菜</option><option>根茎</option><option>茄果</option><option>菌菇</option><option>豆类</option><option>葱姜蒜</option><option>其他</option></select></div>
-            <div class="form-group"><label>品名 (必填)</label><input type="text" id="name" placeholder="如：菠菜" list="nameSuggest"><datalist id="nameSuggest"></datalist></div>
+    <div class="top-container">
+        <div class="app-title">🐲 大智蔬菜采购助手 🐲</div>
+        <div class="tab-bar" id="tabBar">
+            <div class="tab active" data-tab="add">📝 录入</div>
+            <div class="tab" data-tab="list">📋 记录</div>
+            <div class="tab" data-tab="suppliers">🏭 供应商</div>
+            <div class="tab" data-tab="stats">📊 分析</div>
         </div>
-        <div class="grid-2">
-            <div class="form-group"><label>价格 (元/斤) (必填)</label><input type="number" id="price" placeholder="0.00" step="0.01" min="0"></div>
-            <div class="form-group"><label>品质</label><select id="quality"><option value="A">A 优质</option><option value="B" selected>B 中等</option><option value="C">C 一般</option></select></div>
-        </div>
-        <div class="grid-2">
-            <div class="form-group"><label>供应商名称</label><input type="text" id="supplierName" placeholder="如：张记蔬菜" list="supplierSuggest"><datalist id="supplierSuggest"></datalist></div>
-            <div class="form-group"><label>电话</label><input type="text" id="supplierPhone" placeholder="选填"></div>
-        </div>
-        <div class="grid-2">
-            <div class="form-group"><label>产地</label><input type="text" id="origin" placeholder="如：山东寿光" list="originSuggest"><datalist id="originSuggest"></datalist></div>
-            <div class="form-group"><label>档口号</label><input type="text" id="stall" placeholder="如：A12" list="stallSuggest"><datalist id="stallSuggest"></datalist></div>
-        </div>
-        <div class="form-group"><label>档口位置</label><input type="text" id="location" placeholder="如：东区3排"></div>
-        <div class="form-group"><label>备注</label><input type="text" id="notes" placeholder="选填"></div>
-        <button class="btn btn-primary" onclick="addRecord()">✅ 保存这一笔</button>
-        <button class="btn btn-outline" onclick="clearForm()">🔄 清空重新填</button>
     </div>
-</div>
 
-<!-- 记录页 -->
-<div id="listView" class="view">
-    <div class="card">
-        <div class="toolbar">
-            <input type="text" id="search" placeholder="🔍 搜品名/供应商/产地" oninput="renderList()">
-            <select id="filterSupplier" onchange="renderList()"><option value="">全部供应商</option></select>
-            <select id="filterQuality" onchange="renderList()"><option value="">全部品质</option><option>A</option><option>B</option><option>C</option></select>
-        </div>
-        <div style="display:flex; gap:8px; margin-bottom:12px;">
-            <button class="btn-outline btn-sm" onclick="exportData()">⬇️ 导出备份</button>
-            <button class="btn-outline btn-sm" onclick="document.getElementById('importFile').click()">⬆️ 导入恢复</button>
-            <input type="file" id="importFile" accept=".json" hidden onchange="importData(event)">
-        </div>
-        <div id="recordList"></div>
-    </div>
-</div>
-
-<!-- 供应商页 -->
-<div id="suppliersView" class="view">
-    <div class="card">
-        <h3 style="margin-bottom:12px;color:#2d6a4f">🏭 供应商目录</h3>
-        <div id="supplierList"></div>
-    </div>
-</div>
-
-<!-- 分析页 -->
-<div id="statsView" class="view">
-    <div class="card">
-        <h3 style="margin-bottom:12px;color:#2d6a4f">📈 价格走势</h3>
-        <select id="trendVeg" style="margin-bottom:10px;" onchange="updateCharts()"></select>
-        <canvas id="priceChart"></canvas>
-    </div>
-    <div class="card">
-        <h3 style="margin-bottom:12px;color:#2d6a4f">📅 每日采购明细</h3>
-        <div id="dailyDetail"></div>
-    </div>
-    <div class="card">
-        <h3 style="margin-bottom:12px;color:#2d6a4f">🔍 双日价格对比</h3>
-        <div class="grid-2" style="margin-bottom:10px;">
-            <div class="form-group"><label>日期 A</label><input type="date" id="compareDateA"></div>
-            <div class="form-group"><label>日期 B</label><input type="date" id="compareDateB"></div>
-        </div>
-        <button class="btn-outline btn-sm" onclick="compareDates()" style="width:100%;margin-top:0;">对比价格</button>
-        <div id="compareResult" style="margin-top:12px;"></div>
-    </div>
-</div>
-
-<script>
-    const STORAGE_KEY = 'procurement_records_v5';
-    let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-
-    // ---------- 智能联想 ----------
-    function updateDatalists() {
-        const allNames = [...new Set(records.map(r => r.name).filter(Boolean))].sort();
-        document.getElementById('nameSuggest').innerHTML = allNames.map(n => `<option value="${n}">`).join('');
-
-        const allSupplierNames = [...new Set(records.map(r => r.supplierName).filter(Boolean))].sort();
-        document.getElementById('supplierSuggest').innerHTML = allSupplierNames.map(s => `<option value="${s}">`).join('');
-        const sel = document.getElementById('filterSupplier');
-        const curVal = sel.value;
-        sel.innerHTML = '<option value="">全部供应商</option>' + allSupplierNames.map(s => `<option value="${s}" ${s===curVal?'selected':''}>${s}</option>`).join('');
-
-        const allOrigins = [...new Set(records.map(r => r.origin).filter(Boolean))].sort();
-        document.getElementById('originSuggest').innerHTML = allOrigins.map(o => `<option value="${o}">`).join('');
-
-        const allStalls = [...new Set(records.map(r => r.stall).filter(Boolean))].sort();
-        document.getElementById('stallSuggest').innerHTML = allStalls.map(s => `<option value="${s}">`).join('');
-    }
-
-    // ---------- 常用品种 ----------
-    function updateQuickMemory() {
-        const map = new Map();
-        records.forEach(r => {
-            if (!map.has(r.name)) map.set(r.name, { category: r.category, origin: r.origin, stall: r.stall, location: r.location, supplierName: r.supplierName, supplierPhone: r.supplierPhone });
-        });
-        const names = [...map.keys()].slice(0, 8);
-        document.getElementById('quickChips').innerHTML = names.map(n => `<span class="chip" onclick="quickFill('${n}')">${n}</span>`).join('');
-    }
-
-    function quickFill(name) {
-        const last = records.filter(r => r.name === name).sort((a,b) => b.date.localeCompare(a.date))[0];
-        if (last) {
-            document.getElementById('category').value = last.category || '';
-            document.getElementById('name').value = last.name;
-            document.getElementById('origin').value = last.origin || '';
-            document.getElementById('stall').value = last.stall || '';
-            document.getElementById('location').value = last.location || '';
-            document.getElementById('supplierName').value = last.supplierName || '';
-            document.getElementById('supplierPhone').value = last.supplierPhone || '';
-            document.getElementById('price').value = '';
-            document.getElementById('quality').value = 'B';
-            document.getElementById('notes').value = '';
-            document.getElementById('price').focus();
-        }
-    }
-
-    // ---------- 录入操作 ----------
-    document.getElementById('date').value = new Date().toISOString().split('T')[0];
-
-    function addRecord() {
-        const name = document.getElementById('name').value.trim();
-        const price = parseFloat(document.getElementById('price').value);
-        if (!name || isNaN(price)) { alert('请至少填写品名和价格'); return; }
-        const r = {
-            id: Date.now(),
-            date: document.getElementById('date').value,
-            category: document.getElementById('category').value,
-            name: name,
-            price: price,
-            origin: document.getElementById('origin').value.trim(),
-            stall: document.getElementById('stall').value.trim(),
-            location: document.getElementById('location').value.trim(),
-            quality: document.getElementById('quality').value,
-            supplierName: document.getElementById('supplierName').value.trim(),
-            supplierPhone: document.getElementById('supplierPhone').value.trim(),
-            notes: document.getElementById('notes').value.trim()
-        };
-        records.unshift(r);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-        clearForm();
-        updateAllViews();
-        switchTab('list');
-    }
-
-    function clearForm() {
-        ['name','price','origin','stall','location','supplierName','supplierPhone','notes'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('category').value = '';
-        document.getElementById('quality').value = 'B';
-    }
-
-    function deleteRecord(id) {
-        if (!confirm('确定删除？')) return;
-        records = records.filter(r => r.id !== id);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-        updateAllViews();
-    }
-
-    // ---------- 记录列表 ----------
-    function renderList() {
-        const search = document.getElementById('search').value.toLowerCase();
-        const fSupplier = document.getElementById('filterSupplier').value;
-        const fQuality = document.getElementById('filterQuality').value;
-        let filtered = records.filter(r => {
-            if (fSupplier && r.supplierName !== fSupplier) return false;
-            if (fQuality && r.quality !== fQuality) return false;
-            if (search) {
-                const text = `${r.name} ${r.supplierName} ${r.origin} ${r.stall} ${r.location} ${r.notes}`.toLowerCase();
-                if (!text.includes(search)) return false;
-            }
-            return true;
-        });
-        const container = document.getElementById('recordList');
-        if (filtered.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">暂无记录</div>';
-            return;
-        }
-        container.innerHTML = filtered.map(r => `
-            <div class="record-item">
-                <div class="info">
-                    <div class="name">${r.name} <span class="badge ${r.quality}">${r.quality || '-'}</span></div>
-                    <div class="meta">${r.date} · ¥${r.price.toFixed(2)} · ${r.origin || '产地不详'}</div>
-                    <div class="meta">🏭 ${r.supplierName || '未填'} ${r.supplierPhone ? '📞'+r.supplierPhone : ''} · 档口 ${r.stall || '-'} ${r.location||''}</div>
-                    ${r.notes ? `<div style="font-size:12px;color:#475569;">📌 ${r.notes}</div>` : ''}
-                </div>
-                <button class="btn-danger btn-sm" style="margin-left:8px;" onclick="deleteRecord(${r.id})">删除</button>
+    <!-- 录入页 -->
+    <div id="addView" class="view active">
+        <div class="card">
+            <h3 style="margin-bottom:12px;color:#2d6a4f">⚡ 常用品种快速录入</h3>
+            <div class="form-group" style="margin-bottom:12px;">
+                <input type="text" id="quickVegSearch" placeholder="🔍 搜索常用品名..." list="quickVegList" onchange="onQuickVegSelect()">
+                <datalist id="quickVegList"></datalist>
             </div>
-        `).join('');
-    }
+        </div>
+        <div class="card">
+            <h3 style="margin-bottom:12px;color:#2d6a4f">✏️ 新增采购记录</h3>
+            <div class="form-group"><label>日期 (必填)</label><input type="date" id="date"></div>
+            <div class="grid-2">
+                <div class="form-group"><label>品类</label><select id="category"><option value="">选择</option><option>叶菜</option><option>根茎</option><option>茄果</option><option>菌菇</option><option>豆类</option><option>葱姜蒜</option><option>其他</option></select></div>
+                <div class="form-group"><label>品名 (必填)</label><input type="text" id="name" placeholder="如：菠菜" list="nameSuggest"><datalist id="nameSuggest"></datalist></div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label>价格 (元) (必填)</label><input type="number" id="price" placeholder="0.00" step="0.01" min="0"></div>
+                <div class="form-group"><label>重量/数量</label><input type="number" id="weight" placeholder="如：10" step="0.1" min="0"></div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label>单位</label>
+                    <select id="unit">
+                        <option value="斤" selected>斤</option>
+                        <option value="件">件</option>
+                        <option value="箱">箱</option>
+                        <option value="袋">袋</option>
+                        <option value="捆">捆</option>
+                        <option value="散装">散装</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>品质</label><select id="quality"><option value="A">A 优质</option><option value="B" selected>B 中等</option><option value="C">C 一般</option></select></div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label>供应商名称</label><input type="text" id="supplierName" placeholder="如：张记蔬菜" list="supplierSuggest"><datalist id="supplierSuggest"></datalist></div>
+                <div class="form-group"><label>电话</label><input type="text" id="supplierPhone" placeholder="选填"></div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label>产地</label><input type="text" id="origin" placeholder="如：山东寿光" list="originSuggest"><datalist id="originSuggest"></datalist></div>
+                <div class="form-group"><label>档口号</label><input type="text" id="stall" placeholder="如：A12" list="stallSuggest"><datalist id="stallSuggest"></datalist></div>
+            </div>
+            <div class="form-group"><label>备注</label><input type="text" id="notes" placeholder="选填"></div>
+            <button class="btn btn-primary" onclick="addRecord()">✅ 弄一手</button>
+            <button class="btn btn-outline" onclick="clearForm()">🔄 来过</button>
+        </div>
+    </div>
 
-    // ---------- 供应商目录 ----------
-    function renderSuppliers() {
-        const supplierMap = {};
-        records.forEach(r => {
-            if (!r.supplierName) return;
-            if (!supplierMap[r.supplierName]) supplierMap[r.supplierName] = { count:0, totalPrice:0, aCount:0, phone: r.supplierPhone || '' };
-            supplierMap[r.supplierName].count++;
-            supplierMap[r.supplierName].totalPrice += r.price;
-            if (r.quality === 'A') supplierMap[r.supplierName].aCount++;
-            if (r.supplierPhone) supplierMap[r.supplierName].phone = r.supplierPhone;
-        });
-        const suppliers = Object.entries(supplierMap).sort((a,b) => b[1].count - a[1].count);
-        const container = document.getElementById('supplierList');
-        if (suppliers.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">暂无供应商数据</div>';
-            return;
+    <!-- 记录页 -->
+    <div id="listView" class="view">
+        <div class="card">
+            <div class="toolbar">
+                <input type="text" id="search" placeholder="🔍 搜品名/供应商/产地" oninput="renderList()">
+                <select id="filterSupplier" onchange="renderList()"><option value="">全部供应商</option></select>
+                <select id="filterQuality" onchange="renderList()"><option value="">全部品质</option><option>A</option><option>B</option><option>C</option></select>
+            </div>
+            <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+                <button class="btn-outline btn-sm" onclick="exportData()">⬇️ 导出备份</button>
+                <button class="btn-outline btn-sm" onclick="document.getElementById('importFile').click()">⬆️ 导入恢复</button>
+                <input type="file" id="importFile" accept=".json" hidden onchange="importData(event)">
+            </div>
+            <div id="recordList"></div>
+        </div>
+    </div>
+
+    <!-- 供应商页 -->
+    <div id="suppliersView" class="view">
+        <div class="card">
+            <h3 style="margin-bottom:12px;color:#2d6a4f">🏭 供应商目录</h3>
+            <div class="search-box">
+                <input type="text" id="supplierSearch" placeholder="🔍 搜索供应商名称..." oninput="renderSuppliers()">
+                <span class="search-icon">🔍</span>
+            </div>
+            <div id="supplierList"></div>
+        </div>
+    </div>
+
+    <!-- 分析页 -->
+    <div id="statsView" class="view">
+        <div class="card">
+            <h3 style="margin-bottom:12px;color:#2d6a4f">📈 价格走势</h3>
+            <div class="form-group">
+                <label>选择品名（可输入搜索）</label>
+                <input type="text" id="trendVeg" list="trendVegList" placeholder="🔍 搜索品名..." onchange="drawPriceChart()" oninput="onTrendVegInput()">
+                <datalist id="trendVegList"></datalist>
+            </div>
+            <canvas id="priceChart"></canvas>
+        </div>
+        <div class="card">
+            <h3 style="margin-bottom:12px;color:#2d6a4f">📅 每日采购明细</h3>
+            <div class="search-box" style="margin-bottom:10px;">
+                <input type="text" id="dailySearch" placeholder="🔍 搜索品名/供应商..." oninput="renderDailyDetail()">
+                <span class="search-icon">🔍</span>
+            </div>
+            <div id="dailyDetail"></div>
+        </div>
+        <div class="card">
+            <h3 style="margin-bottom:12px;color:#2d6a4f">🔍 双日价格对比</h3>
+            <div class="grid-2" style="margin-bottom:10px;">
+                <div class="form-group"><label>日期 A</label><input type="date" id="compareDateA"></div>
+                <div class="form-group"><label>日期 B</label><input type="date" id="compareDateB"></div>
+            </div>
+            <button class="btn-outline btn-sm" onclick="compareDates()" style="width:100%;margin-top:0;">对比价格</button>
+            <div id="compareResult" style="margin-top:12px;"></div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'procurement_records_v7';
+        let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+        // 安全获取元素值
+        function safeVal(id) {
+            const el = document.getElementById(id);
+            return el ? el.value : '';
         }
-        container.innerHTML = suppliers.map(([name, data]) => {
-            const avg = (data.totalPrice / data.count).toFixed(2);
-            const aRate = ((data.aCount / data.count)*100).toFixed(0);
-            return `
-                <div class="supplier-card" onclick="filterBySupplier('${name}')">
+
+        function safeSetVal(id, val) {
+            const el = document.getElementById(id);
+            if (el) el.value = val;
+        }
+
+        // ---------- 智能联想 ----------
+        function updateDatalists() {
+            const allNames = [...new Set(records.map(r => r.name).filter(Boolean))].sort();
+            document.getElementById('nameSuggest').innerHTML = allNames.map(n => `<option value="${n}">`).join('');
+            document.getElementById('trendVegList').innerHTML = allNames.map(n => `<option value="${n}">`).join('');
+            document.getElementById('quickVegList').innerHTML = allNames.map(n => `<option value="${n}">`).join('');
+
+            const allSupplierNames = [...new Set(records.map(r => r.supplierName).filter(Boolean))].sort();
+            document.getElementById('supplierSuggest').innerHTML = allSupplierNames.map(s => `<option value="${s}">`).join('');
+            const sel = document.getElementById('filterSupplier');
+            const curVal = sel.value;
+            sel.innerHTML = '<option value="">全部供应商</option>' + allSupplierNames.map(s => `<option value="${s}" ${s===curVal?'selected':''}>${s}</option>`).join('');
+
+            const allOrigins = [...new Set(records.map(r => r.origin).filter(Boolean))].sort();
+            document.getElementById('originSuggest').innerHTML = allOrigins.map(o => `<option value="${o}">`).join('');
+
+            const allStalls = [...new Set(records.map(r => r.stall).filter(Boolean))].sort();
+            document.getElementById('stallSuggest').innerHTML = allStalls.map(s => `<option value="${s}">`).join('');
+        }
+
+        // ---------- 快速录入搜索框处理 ----------
+        function onQuickVegSelect() {
+            const veg = safeVal('quickVegSearch').trim();
+            if (!veg) return;
+            // 查找该品名最近一条记录，只提取品类和单位
+            const last = records.filter(r => r.name === veg).sort((a, b) => b.date.localeCompare(a.date))[0];
+            if (last) {
+                safeSetVal('category', last.category || '');
+                safeSetVal('name', last.name);
+                safeSetVal('unit', last.unit || '斤');
+                // 清空其他字段
+                ['price', 'weight', 'origin', 'stall', 'supplierName', 'supplierPhone', 'notes'].forEach(id => {
+                    safeSetVal(id, '');
+                });
+                safeSetVal('quality', 'B');
+                const priceEl = document.getElementById('price');
+                if (priceEl) priceEl.focus();
+            }
+            // 清空搜索框以便下次使用
+            safeSetVal('quickVegSearch', '');
+        }
+
+        // ---------- 录入操作 ----------
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+
+        function addRecord() {
+            const name = safeVal('name').trim();
+            const price = parseFloat(safeVal('price'));
+            if (!name || isNaN(price)) { alert('请至少填写品名和价格'); return; }
+            const weightVal = parseFloat(safeVal('weight'));
+            const r = {
+                id: Date.now(),
+                date: safeVal('date'),
+                category: safeVal('category'),
+                name: name,
+                price: price,
+                weight: isNaN(weightVal) ? null : weightVal,
+                unit: safeVal('unit') || '斤',
+                origin: safeVal('origin').trim(),
+                stall: safeVal('stall').trim(),
+                quality: safeVal('quality'),
+                supplierName: safeVal('supplierName').trim(),
+                supplierPhone: safeVal('supplierPhone').trim(),
+                notes: safeVal('notes').trim()
+            };
+            records.unshift(r);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            clearForm();
+            updateAllViews();
+            switchTab('list');
+        }
+
+        function clearForm() {
+            ['name', 'price', 'weight', 'origin', 'stall', 'supplierName', 'supplierPhone', 'notes', 'quickVegSearch'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const categoryEl = document.getElementById('category');
+            if (categoryEl) categoryEl.value = '';
+            const qualityEl = document.getElementById('quality');
+            if (qualityEl) qualityEl.value = 'B';
+            const unitEl = document.getElementById('unit');
+            if (unitEl) unitEl.value = '斤';
+        }
+
+        function deleteRecord(id) {
+            if (!confirm('确定删除？')) return;
+            records = records.filter(r => r.id !== id);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            updateAllViews();
+        }
+
+        // ---------- 记录列表 ----------
+        function renderList() {
+            const search = safeVal('search').toLowerCase();
+            const fSupplier = safeVal('filterSupplier');
+            const fQuality = safeVal('filterQuality');
+            let filtered = records.filter(r => {
+                if (fSupplier && r.supplierName !== fSupplier) return false;
+                if (fQuality && r.quality !== fQuality) return false;
+                if (search) {
+                    const text = `${r.name} ${r.supplierName} ${r.origin} ${r.stall} ${r.notes} ${r.unit||''}`.toLowerCase();
+                    if (!text.includes(search)) return false;
+                }
+                return true;
+            });
+            const container = document.getElementById('recordList');
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">暂无匹配记录</div>';
+                return;
+            }
+            container.innerHTML = filtered.map(r => {
+                const weightInfo = r.weight != null ? ` · ${r.weight}${r.unit||'斤'}` : '';
+                return `
+                <div class="record-item">
+                    <div class="info">
+                        <div class="name">${r.name} <span class="badge ${r.quality}">${r.quality || '-'}</span></div>
+                        <div class="meta">${r.date} · ¥${r.price.toFixed(2)}${weightInfo} · ${r.origin || '产地不详'}</div>
+                        <div class="meta">🏭 ${r.supplierName || '未填'} ${r.supplierPhone ? '📞'+r.supplierPhone : ''} · 档口 ${r.stall || '-'}</div>
+                        ${r.notes ? `<div style="font-size:12px;color:#475569;">📌 ${r.notes}</div>` : ''}
+                    </div>
+                    <button class="btn-danger btn-sm" style="margin-left:8px;flex-shrink:0;" onclick="deleteRecord(${r.id})">删除</button>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // ---------- 供应商目录 ----------
+        function renderSuppliers() {
+            const searchTerm = safeVal('supplierSearch').toLowerCase();
+            const supplierMap = {};
+            records.forEach(r => {
+                if (!r.supplierName) return;
+                if (!supplierMap[r.supplierName]) supplierMap[r.supplierName] = { count:0, totalPrice:0, aCount:0, phone: r.supplierPhone || '' };
+                supplierMap[r.supplierName].count++;
+                supplierMap[r.supplierName].totalPrice += r.price;
+                if (r.quality === 'A') supplierMap[r.supplierName].aCount++;
+                if (r.supplierPhone) supplierMap[r.supplierName].phone = r.supplierPhone;
+            });
+            let suppliers = Object.entries(supplierMap).sort((a,b) => b[1].count - a[1].count);
+            if (searchTerm) {
+                suppliers = suppliers.filter(([name]) => name.toLowerCase().includes(searchTerm));
+            }
+            const container = document.getElementById('supplierList');
+            if (suppliers.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">暂无匹配供应商</div>';
+                return;
+            }
+            container.innerHTML = suppliers.map(([name, data]) => {
+                const avg = (data.totalPrice / data.count).toFixed(2);
+                const aRate = ((data.aCount / data.count)*100).toFixed(0);
+                const escapedName = name.replace(/'/g, "\\'");
+                return `
+                <div class="supplier-card" onclick="filterBySupplier('${escapedName}')">
                     <div class="supplier-name">${name} ${data.phone ? '📞'+data.phone : ''}</div>
                     <div class="supplier-stats">
                         <span>合作 ${data.count} 次</span>
@@ -360,176 +632,248 @@
                         <span>A级 ${aRate}%</span>
                     </div>
                 </div>
-            `;
-        }).join('');
-    }
-
-    function filterBySupplier(supplier) {
-        switchTab('list');
-        document.getElementById('filterSupplier').value = supplier;
-        renderList();
-    }
-
-    // ---------- 分析页 ----------
-    let charts = {};
-    function updateCharts() {
-        const vegSelect = document.getElementById('trendVeg');
-        const names = [...new Set(records.map(r => r.name))].sort();
-        vegSelect.innerHTML = names.map(n => `<option>${n}</option>`).join('');
-        if (names.length && !vegSelect.value) vegSelect.value = names[0];
-        const veg = vegSelect.value;
-        const vegData = records.filter(r => r.name === veg).sort((a,b) => a.date.localeCompare(b.date));
-        if (charts.price) charts.price.destroy();
-        charts.price = new Chart(document.getElementById('priceChart'), {
-            type: 'line',
-            data: { labels: vegData.map(r => r.date), datasets: [{ label: veg+' 价格', data: vegData.map(r => r.price), borderColor: '#2d6a4f', tension: 0.2 }] },
-            options: { responsive: true }
-        });
-    }
-
-    function renderDailyDetail() {
-        const groups = new Map();
-        records.forEach(r => {
-            const date = r.date;
-            if (!groups.has(date)) groups.set(date, []);
-            groups.get(date).push(r);
-        });
-        const sortedDates = [...groups.keys()].sort().reverse();
-        let html = '';
-        sortedDates.forEach(date => {
-            const items = groups.get(date);
-            const species = new Set(items.map(i => i.name)).size;
-            html += `
-            <div class="date-group">
-                <div class="date-header" onclick="toggleDateDetail('${date}')">
-                    <span>📆 ${date} · ${items.length}笔 · ${species}个品种</span>
-                    <span id="arrow_${date}">▼</span>
-                </div>
-                <div class="date-detail" id="detail_${date}" style="display:block;">
-                    ${items.map(r => `
-                        <div style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:14px;">
-                            <span style="font-weight:600;">${r.name}</span>
-                            <span class="badge ${r.quality}">${r.quality||'-'}</span>
-                            <span style="float:right;">¥${r.price.toFixed(2)}</span>
-                            <div style="color:#64748b;font-size:12px;">🏭 ${r.supplierName||'-'} · 档口 ${r.stall||'-'} ${r.location||''}</div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>`;
-        });
-        document.getElementById('dailyDetail').innerHTML = html || '<div style="text-align:center;color:#94a3b8;">暂无采购记录</div>';
-    }
-
-    window.toggleDateDetail = function(date) {
-        const detail = document.getElementById('detail_'+date);
-        const arrow = document.getElementById('arrow_'+date);
-        if (detail.style.display === 'none') {
-            detail.style.display = 'block';
-            arrow.textContent = '▼';
-        } else {
-            detail.style.display = 'none';
-            arrow.textContent = '▶';
-        }
-    };
-
-    function compareDates() {
-        const dateA = document.getElementById('compareDateA').value;
-        const dateB = document.getElementById('compareDateB').value;
-        const resultDiv = document.getElementById('compareResult');
-        if (!dateA || !dateB) { resultDiv.innerHTML = '<div style="color:#b91c1c;">请选择两个日期</div>'; return; }
-        if (dateA === dateB) { resultDiv.innerHTML = '<div style="color:#b91c1c;">请选择不同的日期</div>'; return; }
-
-        const recordsA = records.filter(r => r.date === dateA);
-        const recordsB = records.filter(r => r.date === dateB);
-        if (recordsA.length === 0 || recordsB.length === 0) {
-            resultDiv.innerHTML = '<div style="color:#b91c1c;">所选日期至少有一天无采购记录</div>';
-            return;
+                `;
+            }).join('');
         }
 
-        const priceA = {}, priceB = {};
-        recordsA.forEach(r => { if (!priceA[r.name]) priceA[r.name] = []; priceA[r.name].push(r.price); });
-        recordsB.forEach(r => { if (!priceB[r.name]) priceB[r.name] = []; priceB[r.name].push(r.price); });
-        const commonNames = Object.keys(priceA).filter(n => priceB[n]);
-
-        if (commonNames.length === 0) {
-            resultDiv.innerHTML = '<div>这两天没有相同的采购品种</div>';
-            return;
+        function filterBySupplier(supplier) {
+            switchTab('list');
+            safeSetVal('filterSupplier', supplier);
+            renderList();
         }
 
-        let tableHtml = `<table class="compare-table"><tr><th>品名</th><th>${dateA} 均价</th><th>${dateB} 均价</th><th>变化</th></tr>`;
-        commonNames.forEach(name => {
-            const avgA = (priceA[name].reduce((a,b)=>a+b,0) / priceA[name].length).toFixed(2);
-            const avgB = (priceB[name].reduce((a,b)=>a+b,0) / priceB[name].length).toFixed(2);
-            const diff = (avgB - avgA).toFixed(2);
-            let diffClass = '';
-            let diffSymbol = '';
-            if (diff > 0) { diffClass = 'diff-up'; diffSymbol = '↑'; }
-            else if (diff < 0) { diffClass = 'diff-down'; diffSymbol = '↓'; }
-            tableHtml += `<tr>
-                <td>${name}</td>
-                <td>¥${avgA}</td>
-                <td>¥${avgB}</td>
-                <td class="${diffClass}">${diffSymbol} ¥${Math.abs(diff).toFixed(2)}</td>
-            </tr>`;
-        });
-        tableHtml += '</table>';
-        resultDiv.innerHTML = tableHtml;
-    }
+        // ---------- 分析页 ----------
+        let charts = {};
 
-    // ---------- 导航 ----------
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
-        document.getElementById(`${tabId}View`).classList.add('active');
-        if (tabId === 'add') updateQuickMemory();
-        if (tabId === 'list') renderList();
-        if (tabId === 'suppliers') renderSuppliers();
-        if (tabId === 'stats') { updateCharts(); renderDailyDetail(); }
-    }
-    document.getElementById('tabBar').addEventListener('click', e => {
-        const tab = e.target.closest('.tab');
-        if (!tab) return;
-        switchTab(tab.dataset.tab);
-    });
+        function onTrendVegInput() {
+            // 用户手动输入时，datalist自动过滤
+        }
 
-    // ---------- 备份恢复 ----------
-    function exportData() {
-        const blob = new Blob([JSON.stringify(records, null, 2)], {type: 'application/json'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `采购备份_${new Date().toISOString().slice(0,10)}.json`;
-        a.click();
-    }
-    function importData(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = ev => {
-            try {
-                records = JSON.parse(ev.target.result);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-                updateAllViews();
-                alert('数据恢复成功');
-            } catch(ex) { alert('文件格式错误'); }
+        function drawPriceChart() {
+            const vegInput = document.getElementById('trendVeg');
+            const veg = vegInput ? vegInput.value.trim() : '';
+            if (!veg) {
+                if (charts.price) { charts.price.destroy(); charts.price = null; }
+                const canvas = document.getElementById('priceChart');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                return;
+            }
+            const vegData = records.filter(r => r.name === veg).sort((a,b) => a.date.localeCompare(b.date));
+            if (charts.price) { charts.price.destroy(); charts.price = null; }
+            if (vegData.length === 0) {
+                const canvas = document.getElementById('priceChart');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('该品名暂无采购记录', canvas.width/2, canvas.height/2);
+                return;
+            }
+            charts.price = new Chart(document.getElementById('priceChart'), {
+                type: 'line',
+                data: {
+                    labels: vegData.map(r => r.date),
+                    datasets: [{
+                        label: veg + ' 价格 (元)',
+                        data: vegData.map(r => r.price),
+                        borderColor: '#2d6a4f',
+                        backgroundColor: 'rgba(45,106,79,0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#2d6a4f',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: true, labels: { font: { size: 13 } } }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: { callback: v => '¥' + v.toFixed(1) }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            const allNames = [...new Set(records.map(r => r.name).filter(Boolean))].sort();
+            document.getElementById('trendVegList').innerHTML = allNames.map(n => `<option value="${n}">`).join('');
+            const vegInput = document.getElementById('trendVeg');
+            if (vegInput && !vegInput.value.trim() && allNames.length > 0) {
+                vegInput.value = allNames[0];
+            }
+            drawPriceChart();
+        }
+
+        function renderDailyDetail() {
+            const searchTerm = safeVal('dailySearch').toLowerCase();
+            const groups = new Map();
+            records.forEach(r => {
+                const date = r.date;
+                if (!groups.has(date)) groups.set(date, []);
+                groups.get(date).push(r);
+            });
+            const sortedDates = [...groups.keys()].sort().reverse();
+            let html = '';
+            sortedDates.forEach(date => {
+                let items = groups.get(date);
+                if (searchTerm) {
+                    items = items.filter(r => {
+                        const text = `${r.name} ${r.supplierName} ${r.origin} ${r.stall} ${r.notes} ${r.unit||''}`.toLowerCase();
+                        return text.includes(searchTerm);
+                    });
+                }
+                if (items.length === 0) return;
+                const species = new Set(items.map(i => i.name)).size;
+                const dateId = date.replace(/-/g, '_');
+                html += `
+                <div class="date-group">
+                    <div class="date-header" onclick="toggleDateDetail('${dateId}')">
+                        <span>📆 ${date} · ${items.length}笔 · ${species}个品种</span>
+                        <span id="arrow_${dateId}">▼</span>
+                    </div>
+                    <div class="date-detail" id="detail_${dateId}" style="display:block;">
+                        ${items.map(r => {
+                            const weightInfo = r.weight != null ? ` · ${r.weight}${r.unit||'斤'}` : '';
+                            return `
+                            <div style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:14px;">
+                                <span style="font-weight:600;">${r.name}</span>
+                                <span class="badge ${r.quality}">${r.quality||'-'}</span>
+                                <span style="float:right;">¥${r.price.toFixed(2)}${weightInfo}</span>
+                                <div style="color:#64748b;font-size:12px;">🏭 ${r.supplierName||'-'} · 档口 ${r.stall||'-'}</div>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>`;
+            });
+            document.getElementById('dailyDetail').innerHTML = html || '<div style="text-align:center;color:#94a3b8;padding:16px;">暂无匹配的采购记录</div>';
+        }
+
+        window.toggleDateDetail = function(dateId) {
+            const detail = document.getElementById('detail_'+dateId);
+            const arrow = document.getElementById('arrow_'+dateId);
+            if (!detail || !arrow) return;
+            if (detail.style.display === 'none') {
+                detail.style.display = 'block';
+                arrow.textContent = '▼';
+            } else {
+                detail.style.display = 'none';
+                arrow.textContent = '▶';
+            }
         };
-        reader.readAsText(file);
-        e.target.value = '';
-    }
 
-    function updateAllViews() {
-        updateDatalists();
-        updateQuickMemory();
-        renderList();
-        renderSuppliers();
-        if (document.getElementById('statsView').classList.contains('active')) {
-            updateCharts();
-            renderDailyDetail();
+        function compareDates() {
+            const dateA = safeVal('compareDateA');
+            const dateB = safeVal('compareDateB');
+            const resultDiv = document.getElementById('compareResult');
+            if (!dateA || !dateB) { resultDiv.innerHTML = '<div style="color:#b91c1c;padding:8px;">请选择两个日期</div>'; return; }
+            if (dateA === dateB) { resultDiv.innerHTML = '<div style="color:#b91c1c;padding:8px;">请选择不同的日期</div>'; return; }
+
+            const recordsA = records.filter(r => r.date === dateA);
+            const recordsB = records.filter(r => r.date === dateB);
+            if (recordsA.length === 0 || recordsB.length === 0) {
+                resultDiv.innerHTML = '<div style="color:#b91c1c;padding:8px;">所选日期至少有一天无采购记录</div>';
+                return;
+            }
+
+            const priceA = {}, priceB = {};
+            recordsA.forEach(r => { if (!priceA[r.name]) priceA[r.name] = []; priceA[r.name].push(r.price); });
+            recordsB.forEach(r => { if (!priceB[r.name]) priceB[r.name] = []; priceB[r.name].push(r.price); });
+            const commonNames = Object.keys(priceA).filter(n => priceB[n]);
+
+            if (commonNames.length === 0) {
+                resultDiv.innerHTML = '<div style="padding:8px;">这两天没有相同的采购品种</div>';
+                return;
+            }
+
+            let tableHtml = `<table class="compare-table"><tr><th>品名</th><th>${dateA} 均价</th><th>${dateB} 均价</th><th>变化</th></tr>`;
+            commonNames.forEach(name => {
+                const avgA = (priceA[name].reduce((a,b)=>a+b,0) / priceA[name].length).toFixed(2);
+                const avgB = (priceB[name].reduce((a,b)=>a+b,0) / priceB[name].length).toFixed(2);
+                const diff = (avgB - avgA).toFixed(2);
+                let diffClass = '';
+                let diffSymbol = '';
+                if (diff > 0) { diffClass = 'diff-up'; diffSymbol = '↑'; }
+                else if (diff < 0) { diffClass = 'diff-down'; diffSymbol = '↓'; }
+                tableHtml += `<tr>
+                    <td>${name}</td>
+                    <td>¥${avgA}</td>
+                    <td>¥${avgB}</td>
+                    <td class="${diffClass}">${diffSymbol} ¥${Math.abs(diff).toFixed(2)}</td>
+                </tr>`;
+            });
+            tableHtml += '</table>';
+            resultDiv.innerHTML = tableHtml;
         }
-    }
 
-    // 初始化
-    updateAllViews();
-</script>
+        // ---------- 导航 ----------
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            const targetTab = document.querySelector(`[data-tab="${tabId}"]`);
+            if (targetTab) targetTab.classList.add('active');
+            const targetView = document.getElementById(`${tabId}View`);
+            if (targetView) targetView.classList.add('active');
+
+            if (tabId === 'add') { /* 快速搜索列表已在updateAllViews中更新 */ }
+            if (tabId === 'list') renderList();
+            if (tabId === 'suppliers') renderSuppliers();
+            if (tabId === 'stats') { updateCharts(); renderDailyDetail(); }
+        }
+        document.getElementById('tabBar').addEventListener('click', e => {
+            const tab = e.target.closest('.tab');
+            if (!tab) return;
+            switchTab(tab.dataset.tab);
+        });
+
+        // ---------- 备份恢复 ----------
+        function exportData() {
+            const blob = new Blob([JSON.stringify(records, null, 2)], {type: 'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `采购备份_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                try {
+                    const imported = JSON.parse(ev.target.result);
+                    if (!Array.isArray(imported)) throw new Error('格式错误');
+                    records = imported;
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+                    updateAllViews();
+                    alert('数据恢复成功！共导入 ' + records.length + ' 条记录');
+                } catch (ex) { alert('文件格式错误，请选择正确的备份文件'); }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        function updateAllViews() {
+            updateDatalists();
+            // 更新快速搜索datalist已在updateDatalists中完成
+            renderList();
+            renderSuppliers();
+            if (document.getElementById('statsView').classList.contains('active')) {
+                updateCharts();
+                renderDailyDetail();
+            }
+        }
+
+        // 初始化
+        updateAllViews();
+    </script>
 </body>
 </html>
